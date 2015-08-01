@@ -1,0 +1,19 @@
+{
+  "name": "process",
+  "version": "0.0.1",
+  "license": "MIT",
+  "scripts": {
+    "build": "./node_modules/.bin/gulp"
+  },
+  "keywords": [
+    "process"
+  ],
+  "devDependencies": {
+    "del": "^1.2.0",
+    "gulp": "^3.9.0",
+    "gulp-rename": "^1.2.2",
+    "gulp-uglify": "^1.2.0",
+    "should": "^7.0.2"
+  },
+  "dependencies": {}
+}
