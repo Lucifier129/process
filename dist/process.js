@@ -20,7 +20,7 @@
     var isFn = isType('Function')
     var isArr = Array.isArray || isType('Array')
     var isThenable = function(obj) {
-        return value != null && isFn(value.then)
+        return obj != null && isFn(obj.then)
     }
 
     var extend = function(target) {
@@ -83,8 +83,9 @@
             return value
         },
         pipe: function(handlers, value) {
-            var cache = value
-            for (var i = 0, len = handlers; i < len; i += 1) {
+            var prev
+            for (var i = 0, len = handlers.length; i < len; i += 1) {
+                prev = value
                 value = this.dispatch(handlers[i], value)
                 if (isThenable(value)) {
                     var that = this
@@ -92,7 +93,7 @@
                         return that.pipe(handlers.slice(i + 1), result)
                     })
                 } else if (value === null) {
-                    return cache
+                    return prev
                 }
             }
             return value
