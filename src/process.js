@@ -72,21 +72,20 @@
                 return this.resolve(handler, value)
             } else if (isArr(handler)) {
                 return this.pipe(handler, value)
-            } else if (isObj(handler)) {
-                return this.transform(handler, value)
             } else if (isThenable(handler)) {
                 var that = this
                 return handler.then(function(asyncHandler) {
                     return that.dispatch(asyncHandler, value)
                 })
+            } else if (isObj(handler)) {
+                return this.transform(handler, value)
             }
             return value
         },
         pipe: function(handlers, value) {
             var prev
             for (var i = 0, len = handlers.length; i < len; i += 1) {
-                prev = value
-                value = this.dispatch(handlers[i], value)
+                value = this.dispatch(handlers[i], prev = value)
                 if (isThenable(value)) {
                     var that = this
                     return value.then(function(result) {
@@ -99,7 +98,7 @@
             return value
         },
         transform: function(obj, value) {
-            if (isFn(obj.goTo)) {
+            if (isFn(obj.goTo)) { 
                 return this.dispatch(obj.goTo(value), value)
             }
             return value

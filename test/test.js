@@ -140,7 +140,21 @@ describe('Process', function() {
             })
             assert.equal(process.resolve('add3', 0), 3)
         })
-        it('should "忽略非法调度"', function() {
+        it('should "中断传值－分组模式"', function() {
+            var add = function(num) {
+                return num + 1
+            }
+            var stop = function() {
+                return null
+            }
+            var process = new Process({
+                add4: [add, add, add, [add, stop, function() {
+                    throw new Error('如果未中断，抛出错误;中断后，返回上一次的值')
+                }]]
+            })
+            assert.equal(process.resolve('add4', 0), 4)
+        })
+        it('should "调度器之忽略非法调度"', function() {
             var add = function(num) {
                 return num + 1
             }
@@ -153,6 +167,98 @@ describe('Process', function() {
                 add4: [add, add, dispatcher, add, dispatcher, add]
             })
             assert.equal(process.resolve('add4', -4), 0)
+        })
+        it('should "调度器之事件循环"', function() {
+        	var add = function(num) {
+        		return num + 1
+        	}
+        	var dispatcher = {
+        		goTo: function(value) {
+        			return value < 100 ? 'toHundred' : null
+        		}
+        	}
+        	var process = new Process({
+        		toHundred: [add, add, dispatcher],
+        	})
+        	assert.equal(process.resolve('toHundred', 0), 100)
+        })
+        it('should "调度器之异步事件循环"', function(done) {
+        	var add = function(num) {
+        		return num + 1
+        	}
+        	var asyncAdd = function(num) {
+        		return new Promise(function(resolve) {
+        			resolve(add(num))
+        		})
+        	}
+        	var dispatcher = {
+        		goTo: function(value) {
+        			return value < 100 ? 'toHundred' : null
+        		}
+        	}
+        	var process = new Process({
+        		toHundred: [add, asyncAdd, dispatcher],
+        	})
+        	process.resolve('toHundred', 0).then(function(result) {
+        		assert.equal(result, 100)
+        		done()
+        	})
+        })
+        it('should "promise 异步处理器"', function(done) {
+        	var factory = function() {
+        		return new Promise(function(resolve) {
+        			resolve(function(num) {
+        				return num + 1
+        			})
+        		})
+        	}
+
+        	var process = new Process({
+        		add3: [factory(), factory(), factory()]
+        	})
+
+        	process.resolve('add3', 0).then(function(result) {
+        		assert.equal(result, 3)
+        		done()
+        	})
+        })
+        it('should "普通队列里的 promise 异步处理器"', function(done) {
+        	var factory = function() {
+        		return new Promise(function(resolve) {
+        			resolve(function(num) {
+        				return num + 1
+        			})
+        		})
+        	}
+
+        	var process = new Process({
+        		add3: [factory(), factory(), factory()]
+        	})
+
+        	process.resolve('add3', 0).then(function(result) {
+        		assert.equal(result, 3)
+        		done()
+        	})
+        })
+        it('should "调度器里的 promise 异步处理器"', function(done) {
+        	var add = function(num) {
+        		return num + 1
+        	}
+        	var dispatcher = {
+        		goTo: function(value) {
+        			return new Promise(function(resolve) {
+        				resolve(value < 100 ? 'add' : value)
+        			})
+        		}
+        	}
+        	var process = new Process({
+        		add: [add, dispatcher]
+        	})
+
+        	process.resolve('add', 12).then(function(result) {
+        		assert.equal(result, 100)
+        		done()
+        	})
         })
     })
 })
