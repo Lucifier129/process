@@ -204,24 +204,6 @@ describe('Process', function() {
         		done()
         	})
         })
-        it('should "promise 异步处理器"', function(done) {
-        	var factory = function() {
-        		return new Promise(function(resolve) {
-        			resolve(function(num) {
-        				return num + 1
-        			})
-        		})
-        	}
-
-        	var process = new Process({
-        		add3: [factory(), factory(), factory()]
-        	})
-
-        	process.resolve('add3', 0).then(function(result) {
-        		assert.equal(result, 3)
-        		done()
-        	})
-        })
         it('should "普通队列里的 promise 异步处理器"', function(done) {
         	var factory = function() {
         		return new Promise(function(resolve) {
