@@ -39,8 +39,9 @@
         return target
     }
 
-    function Process(store) {
+    function Process(store, state) {
         this.store = extend({}, store)
+        this.state = extend({}, state)
     }
 
     Process.prototype = {
@@ -51,7 +52,13 @@
             return this.dispatch(this.store[eventName], value)
         },
         reject: function(errorName, value) {
-            return new Process(this.store.error).resolve(errorName, value)
+            if (!this.error) {
+                this.error = new Process()
+            }
+            if (isObj(this.store.error)) {
+                this.error.extend(this.store.error)
+            }
+            return this.error.resolve(errorName, value)
         },
         willResolve: function(eventName) {
             var that = this
@@ -67,7 +74,7 @@
         },
         dispatch: function(handler, value) {
             if (isFn(handler)) {
-                return handler(value)
+                return handler.call(this, value, this.state)
             } else if (isStr(handler)) {
                 return this.resolve(handler, value)
             } else if (isArr(handler)) {
@@ -83,22 +90,21 @@
             return value
         },
         pipe: function(handlers, value) {
-            var prev
             for (var i = 0, len = handlers.length; i < len; i += 1) {
-                value = this.dispatch(handlers[i], prev = value)
+                value = this.dispatch(handlers[i], value)
                 if (isThenable(value)) {
                     var that = this
                     return value.then(function(result) {
                         return that.pipe(handlers.slice(i + 1), result)
                     })
                 } else if (value === null) {
-                    return prev
+                    return null
                 }
             }
             return value
         },
         transform: function(obj, value) {
-            if (isFn(obj.goTo)) { 
+            if (isFn(obj.goTo)) {
                 return this.dispatch(obj.goTo(value), value)
             }
             return value
@@ -106,5 +112,4 @@
     }
 
     return Process
-
 }));

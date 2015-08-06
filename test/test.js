@@ -135,10 +135,10 @@ describe('Process', function() {
             }
             var process = new Process({
                 add3: [add, add, add, stop, function() {
-                    throw new Error('如果未中断，抛出错误')
+                    throw new Error('如果未中断，抛出错误;中断后，返回null')
                 }]
             })
-            assert.equal(process.resolve('add3', 0), 3)
+            assert.equal(process.resolve('add3', 0), null)
         })
         it('should "中断传值－分组模式"', function() {
             var add = function(num) {
@@ -149,10 +149,10 @@ describe('Process', function() {
             }
             var process = new Process({
                 add4: [add, add, add, [add, stop, function() {
-                    throw new Error('如果未中断，抛出错误;中断后，返回上一次的值')
+                    throw new Error('如果未中断，抛出错误;中断后，返回null')
                 }]]
             })
-            assert.equal(process.resolve('add4', 0), 4)
+            assert.equal(process.resolve('add4', 0), null)
         })
         it('should "调度器之忽略非法调度"', function() {
             var add = function(num) {
