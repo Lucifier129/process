@@ -1,5 +1,10 @@
-//process.js
-;(function(root, factory) {
+/*!
+ * LastModifyTime: Thu Aug 06 2015 22:40:04 GMT+0800 (CST)
+ * Process
+ * Copyright(c) 2015 Jade Gu <guyingjie129@163.com>
+ * MIT Licensed
+ */
+ ;(function(root, factory) {
     if (typeof exports === 'object' && typeof module === 'object')
         module.exports = factory()
     else if (typeof define === 'function' && (define.amd || define.cmd))
@@ -22,11 +27,12 @@
     var isThenable = function(obj) {
         return obj != null && isFn(obj.then)
     }
+    var slice = Array.prototype.slice
 
     var extend = function(target) {
-        var args = Array.prototype.slice.call(arguments, 1)
-        for (var i = 0, len = args.length; i < len; i += 1) {
-            var source = args[i]
+        var sources = slice.call(arguments, 1)
+        for (var i = 0, len = sources.length; i < len; i += 1) {
+            var source = sources[i]
             if (!isObj(source) && !isFn(source)) {
                 continue
             }
@@ -46,7 +52,10 @@
 
     Process.prototype = {
         extend: function() {
-            return extend.apply(null, [this.store].concat(Array.prototype.slice.call(arguments)))
+            return extend.apply(null, [this.store].concat(slice.call(arguments)))
+        },
+        setState: function() {
+            return extend.apply(null, [this.state].concat(slice.call(arguments)))
         },
         resolve: function(eventName, value) {
             return this.dispatch(this.store[eventName], value)
@@ -61,28 +70,28 @@
             return this.error.resolve(errorName, value)
         },
         willResolve: function(eventName) {
-            var that = this
+            var self = this
             return function(value) {
-                return that.resolve(eventName, value)
+                return self.resolve(eventName, value)
             }
         },
         willReject: function(errorName) {
-            var that = this
+            var self = this
             return function(value) {
-                return that.reject(errorName, value)
+                return self.reject(errorName, value)
             }
         },
         dispatch: function(handler, value) {
             if (isFn(handler)) {
                 return handler.call(this, value, this.state)
             } else if (isStr(handler)) {
-                return this.resolve(handler, value)
-            } else if (isArr(handler)) {
+                return this.dispatch(this.store[handler], value)
+            } else if (isArr(handler) && handler.length) {
                 return this.pipe(handler, value)
             } else if (isThenable(handler)) {
-                var that = this
+                var self = this
                 return handler.then(function(asyncHandler) {
-                    return that.dispatch(asyncHandler, value)
+                    return self.dispatch(asyncHandler, value)
                 })
             } else if (isObj(handler)) {
                 return this.transform(handler, value)
@@ -90,12 +99,12 @@
             return value
         },
         pipe: function(handlers, value) {
+            var self = this
             for (var i = 0, len = handlers.length; i < len; i += 1) {
                 value = this.dispatch(handlers[i], value)
                 if (isThenable(value)) {
-                    var that = this
-                    return value.then(function(result) {
-                        return that.pipe(handlers.slice(i + 1), result)
+                    return i === len - 1 ? value : value.then(function(result) {
+                        return self.pipe(handlers.slice(i + 1), result)
                     })
                 } else if (value === null) {
                     return null
@@ -105,7 +114,7 @@
         },
         transform: function(obj, value) {
             if (isFn(obj.goTo)) {
-                return this.dispatch(obj.goTo(value), value)
+                return this.dispatch(obj.goTo(value, this.state), value)
             }
             return value
         }
