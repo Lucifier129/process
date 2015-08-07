@@ -1,10 +1,9 @@
 /*!
- * LastModifyTime: Thu Aug 06 2015 22:40:04 GMT+0800 (CST)
- * Process
- * Copyright(c) 2015 Jade Gu <guyingjie129@163.com>
+ * LastModifyTime: 2015-08-07 11:00:07
+ * Process * Copyright(c) 2015 Jade Gu <guyingjie129@163.com>
  * MIT Licensed
  */
- ;(function(root, factory) {
+;(function(root, factory) {
     if (typeof exports === 'object' && typeof module === 'object')
         module.exports = factory()
     else if (typeof define === 'function' && (define.amd || define.cmd))
@@ -14,26 +13,27 @@
     else
         root["Process"] = factory()
 }(this, function() {
-
     var isType = function(type) {
+        type = '[object ' + type + ']'
         return function(obj) {
-            return obj != null ? Object.prototype.toString.call(obj) === '[object ' + type + ']' : false
+            return obj != null && Object.prototype.toString.call(obj) === type
         }
     }
     var isObj = isType('Object')
     var isStr = isType('String')
+    var isNum = isType('Number')
     var isFn = isType('Function')
     var isArr = Array.isArray || isType('Array')
     var isThenable = function(obj) {
         return obj != null && isFn(obj.then)
     }
-    var slice = Array.prototype.slice
 
+    var slice = Array.prototype.slice
     var extend = function(target) {
         var sources = slice.call(arguments, 1)
         for (var i = 0, len = sources.length; i < len; i += 1) {
             var source = sources[i]
-            if (!isObj(source) && !isFn(source)) {
+            if (!isObj(source)) {
                 continue
             }
             for (var key in source) {
@@ -57,22 +57,22 @@
         setState: function() {
             return extend.apply(null, [this.state].concat(slice.call(arguments)))
         },
-        resolve: function(eventName, value) {
-            return this.dispatch(this.store[eventName], value)
+        resolve: function(taskName, value) {
+            return this.dispatch(this.store[taskName], value)
         },
         reject: function(errorName, value) {
+            var error = this.store.error
             if (!this.error) {
-                this.error = new Process()
-            }
-            if (isObj(this.store.error)) {
-                this.error.extend(this.store.error)
+                this.error = new Process(error)
+            } else if (isObj(error)) {
+                this.error.extend(error)
             }
             return this.error.resolve(errorName, value)
         },
-        willResolve: function(eventName) {
+        willResolve: function(taskName) {
             var self = this
             return function(value) {
-                return self.resolve(eventName, value)
+                return self.resolve(taskName, value)
             }
         },
         willReject: function(errorName) {
@@ -82,26 +82,26 @@
             }
         },
         dispatch: function(handler, value) {
+            var self = this
             if (isFn(handler)) {
-                return handler.call(this, value, this.state)
-            } else if (isStr(handler)) {
-                return this.dispatch(this.store[handler], value)
-            } else if (isArr(handler) && handler.length) {
-                return this.pipe(handler, value)
+                return handler.call(self, value, self.state)
+            } else if (isStr(handler) || isNum(handler)) {
+                return self.dispatch(self.store[handler], value)
+            } else if (isArr(handler)) {
+                return handler.length ? self.pipe(handler, value) : value
             } else if (isThenable(handler)) {
-                var self = this
                 return handler.then(function(asyncHandler) {
                     return self.dispatch(asyncHandler, value)
                 })
-            } else if (isObj(handler)) {
-                return this.transform(handler, value)
+            } else if (isObj(handler) && isFn(handler.goTo)) {
+                return self.dispatch(handler.goTo(value, self.state), value)
             }
             return value
         },
         pipe: function(handlers, value) {
             var self = this
             for (var i = 0, len = handlers.length; i < len; i += 1) {
-                value = this.dispatch(handlers[i], value)
+                value = self.dispatch(handlers[i], value)
                 if (isThenable(value)) {
                     return i === len - 1 ? value : value.then(function(result) {
                         return self.pipe(handlers.slice(i + 1), result)
@@ -109,12 +109,6 @@
                 } else if (value === null) {
                     return null
                 }
-            }
-            return value
-        },
-        transform: function(obj, value) {
-            if (isFn(obj.goTo)) {
-                return this.dispatch(obj.goTo(value, this.state), value)
             }
             return value
         }

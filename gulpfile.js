@@ -5,13 +5,13 @@ var header = require('gulp-header')
 var del = require('del')
 
 var banner = 
-`/*!
- * LastModifyTime: ${new Date().toLocaleString()}
- * Process
- * Copyright(c) 2015 Jade Gu <guyingjie129@163.com>
- * MIT Licensed
- */
- `
+'/*!' + '\n' +
+' * LastModifyTime: ' + new Date().toLocaleString()  + '\n' +
+' * Process' +
+' * Copyright(c) 2015 Jade Gu <guyingjie129@163.com>'  + '\n' +
+' * MIT Licensed'  + '\n' +
+' */\n'
+ 
 
 gulp.task('clean', function() {
 	del('./dist/*.js')
