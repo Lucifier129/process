@@ -1,4 +1,5 @@
-;(function(root, factory) {
+;
+(function(root, factory) {
     if (typeof exports === 'object' && typeof module === 'object')
         module.exports = factory()
     else if (typeof define === 'function' && (define.amd || define.cmd))
@@ -83,15 +84,19 @@
             }
             if (isFn(handler)) {
                 return handler.call(self, value, self.state)
-            } else if (isStr(handler) || isNum(handler)) {
+            }
+            if (isStr(handler) || isNum(handler)) {
                 return self.dispatch(self.store[handler], value)
-            } else if (isArr(handler)) {
+            }
+            if (isArr(handler)) {
                 return handler.length ? self.pipe(handler, value) : value
-            } else if (isThenable(handler)) {
+            }
+            if (isThenable(handler)) {
                 return handler.then(function(asyncHandler) {
                     return self.dispatch(asyncHandler, value)
                 })
-            } else if (isObj(handler) && isFn(handler.goTo)) {
+            }
+            if (isObj(handler) && isFn(handler.goTo)) {
                 return self.dispatch(handler.goTo(value, self.state), value)
             }
             return value
@@ -101,8 +106,9 @@
             for (var i = 0, len = handlers.length; i < len; i += 1) {
                 value = self.dispatch(handlers[i], value)
                 if (value === null) {
-                    return null
-                } else if (isThenable(value)) {
+                    return value
+                }
+                if (isThenable(value)) {
                     return i === len - 1 ? value : value.then(function(result) {
                         return self.dispatch(handlers.slice(i + 1), result)
                     })
