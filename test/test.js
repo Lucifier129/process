@@ -153,6 +153,28 @@ describe('Process', function() {
             })
             assert.equal(process.resolve('add4', 0), null)
         })
+        it('should "中断异步传值"', function(done) {
+            var add = function(num) {
+                return new Promise(function(resolve) {
+                    setTimeout(function() {
+                        resolve(num + 1)
+                    }, 1)
+                })
+            }
+            var stop = function() {
+                return null
+            }
+            var process = new Process({
+                add4: [add, add, add, add, stop, function() {
+                    throw new Error('如果未中断，抛出错误;中断后，返回null')
+                }]
+            })
+
+            process.resolve('add4', 0).then(function(result) {
+                assert.equal(result, null)
+                done()
+            })
+        })
         it('should "调度器之忽略非法调度"', function() {
             var add = function(num) {
                 return num + 1
@@ -251,7 +273,7 @@ describe('Process', function() {
                 }
             })
             var willAdd = process.willResolve('add')
-            assert(willAdd(1), 11)
+            assert.equal(willAdd(1), 11)
         })
     })
 

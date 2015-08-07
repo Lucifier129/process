@@ -1,6 +1,6 @@
 /*!
- * LastModifyTime: 2015-08-07 11:09:48
- * Process.js Version: 0.0.3
+ * LastModifyTime: 2015-08-07 11:32:15
+ * Process.js Version: 0.0.4
  * Copyright(c) 2015 Jade Gu <guyingjie129@163.com>
  * MIT Licensed
  */
@@ -84,6 +84,9 @@
         },
         dispatch: function(handler, value) {
             var self = this
+            if (value === null) {
+                return value
+            }
             if (isFn(handler)) {
                 return handler.call(self, value, self.state)
             } else if (isStr(handler) || isNum(handler)) {
@@ -103,12 +106,12 @@
             var self = this
             for (var i = 0, len = handlers.length; i < len; i += 1) {
                 value = self.dispatch(handlers[i], value)
-                if (isThenable(value)) {
-                    return i === len - 1 ? value : value.then(function(result) {
-                        return self.pipe(handlers.slice(i + 1), result)
-                    })
-                } else if (value === null) {
+                if (value === null) {
                     return null
+                } else if (isThenable(value)) {
+                    return i === len - 1 ? value : value.then(function(result) {
+                        return self.dispatch(handlers.slice(i + 1), result)
+                    })
                 }
             }
             return value

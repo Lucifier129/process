@@ -2,7 +2,7 @@
 <html>
 
 <head>
-	<meta charset="utf-8">
+    <meta charset="utf-8">
     <title>test process</title>
 </head>
 
@@ -12,44 +12,43 @@
     <script src="../dist/process.js"></script>
     <script>
     (function() {
-    	var container = document.getElementById('container')
-    	var scope = 1
+        var container = document.getElementById('container')
+        var scope = 1
 
-    	window.describe = function(name, test) {
-    		var title = document.createElement('h' + scope)
-    		title.innerHTML = name
-    		container.appendChild(title)
-    		scope += 1
-    		test()
-    		scope -= 1
-    	}
+        window.describe = function(name, test) {
+            var title = document.createElement('h' + scope)
+            title.innerHTML = name
+            container.appendChild(title)
+            scope += 1
+            test()
+            scope -= 1
+        }
 
-    	window.it = function(describe, test) {
-    		var p = document.createElement('p')
-    		p.innerHTML = describe + ':\n' 
-    		test(function() {
-    		})
-    	}
+        window.it = function(describe, test) {
+            var p = document.createElement('p')
+            p.innerHTML = describe + ':\n'
+            test(function() {})
+        }
 
-    	window.assert = {
-    		equal: function(left, right) {
-    			var p = document.createElement('p')
-    			p.innerHTML = left == right
-    			container.appendChild(p)
-    		},
-    		notEqual: function(left, right) {
-    			var p = document.createElement('p')
-    			p.innerHTML = left != right
-    			container.appendChild(p)
-    		},
-    		deepEqual: function(left, right) {
-    			for (var key in left) {
-    				if (left.hasOwnProperty(key)) {
-    					this.equal(left[key], right[key])
-    				}
-    			}
-    		}
-    	}
+        window.assert = {
+            equal: function(left, right) {
+                var p = document.createElement('p')
+                p.innerHTML = left == right
+                container.appendChild(p)
+            },
+            notEqual: function(left, right) {
+                var p = document.createElement('p')
+                p.innerHTML = left != right
+                container.appendChild(p)
+            },
+            deepEqual: function(left, right) {
+                for (var key in left) {
+                    if (left.hasOwnProperty(key)) {
+                        this.equal(left[key], right[key])
+                    }
+                }
+            }
+        }
 
     })()
 
@@ -205,6 +204,28 @@
                 })
                 assert.equal(process.resolve('add4', 0), null)
             })
+            it('should "中断异步传值"', function(done) {
+                var add = function(num) {
+                    return new Promise(function(resolve) {
+                        setTimeout(function() {
+                            resolve(num + 1)
+                        }, 1)
+                    })
+                }
+                var stop = function() {
+                    return null
+                }
+                var process = new Process({
+                    add4: [add, add, add, add, stop, function() {
+                        throw new Error('如果未中断，抛出错误;中断后，返回null')
+                    }]
+                })
+
+                process.resolve('add4', 0).then(function(result) {
+                    assert.equal(result, null)
+                    done()
+                })
+            })
             it('should "调度器之忽略非法调度"', function() {
                 var add = function(num) {
                     return num + 1
@@ -229,7 +250,7 @@
                     }
                 }
                 var process = new Process({
-                    toHundred: [add, add, dispatcher]
+                    toHundred: [add, add, dispatcher],
                 })
                 assert.equal(process.resolve('toHundred', 0), 100)
             })
@@ -248,7 +269,7 @@
                     }
                 }
                 var process = new Process({
-                    toHundred: [add, asyncAdd, dispatcher]
+                    toHundred: [add, asyncAdd, dispatcher],
                 })
                 process.resolve('toHundred', 0).then(function(result) {
                     assert.equal(result, 100)
