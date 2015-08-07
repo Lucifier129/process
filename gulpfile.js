@@ -9,6 +9,7 @@ var banner =
 '/*!' + '\n' +
 ' * LastModifyTime: ' + new Date().toLocaleString()  + '\n' +
 ' * Process.js Version: ' + packageJSON.version  + '\n' +
+' * Github:https://github.com/Lucifier129/process' + '\n' +
 ' * Copyright(c) 2015 Jade Gu <guyingjie129@163.com>'  + '\n' +
 ' * MIT Licensed'  + '\n' +
 ' */\n'

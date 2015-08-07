@@ -1,6 +1,7 @@
 /*!
- * LastModifyTime: 2015-08-07 13:46:32
+ * LastModifyTime: 2015-08-07 16:28:05
  * Process.js Version: 0.0.5
+ * Github:https://github.com/Lucifier129/process
  * Copyright(c) 2015 Jade Gu <guyingjie129@163.com>
  * MIT Licensed
  */
