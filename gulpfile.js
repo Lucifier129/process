@@ -3,11 +3,12 @@ var rename = require('gulp-rename')
 var uglify = require('gulp-uglify')
 var header = require('gulp-header')
 var del = require('del')
+var packageJSON = require('./package.json')
 
 var banner = 
 '/*!' + '\n' +
 ' * LastModifyTime: ' + new Date().toLocaleString()  + '\n' +
-' * Process' +
+' * Process.js Version: ' + packageJSON.version  + '\n' +
 ' * Copyright(c) 2015 Jade Gu <guyingjie129@163.com>'  + '\n' +
 ' * MIT Licensed'  + '\n' +
 ' */\n'

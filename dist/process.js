@@ -1,6 +1,7 @@
 /*!
- * LastModifyTime: 2015-08-07 11:00:07
- * Process * Copyright(c) 2015 Jade Gu <guyingjie129@163.com>
+ * LastModifyTime: 2015-08-07 11:09:48
+ * Process.js Version: 0.0.3
+ * Copyright(c) 2015 Jade Gu <guyingjie129@163.com>
  * MIT Licensed
  */
 ;(function(root, factory) {
