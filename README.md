@@ -269,17 +269,25 @@ var process = new Process(taskStore, {
 })
 
 process.resolve('minus', 10) // => 9
-process.reject()
+process.reject('404', 'test') // test 404 
 ```
 
+### Process#extend(...sources)
+
+将 sources 合并到 process.store 属性中，返回 store
+
 ### Process#resolve(taskName, value)
-TODO
+
+让 value 值在 taskName 所对应的  taskHandler 队列中传递，如果 taskHandler 全部是同步的，则返回最终的值。如果 taskHandler 队列中存在异步处理器，则返回 promise 对象。
 
 ### Process#reject(errorName, value)
-TODO
+
+让 value 值在 errorName 对应的 errorHandler 队列中传递，返回值同 Process#resolve 方法。
 
 ### Process#willResolve(taskName)
-TODO
+
+Process#resolve 的科里化函数，返回接受 value 参数的函数。
 
 ### Process#willReject(errorName)
-TODO
+
+Process#reject 的科里化函数，返回接受 value 参数的函数。
