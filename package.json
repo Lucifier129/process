@@ -1,28 +1,32 @@
 {
-  "name": "process-table",
-  "version": "0.0.5",
-  "license": "MIT",
-  "main": "./dist/process.js",
-  "scripts": {
-    "build": "./node_modules/.bin/gulp"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Lucifier129/process.git"
-  },
-  "author": {
-    "name": "Jade Gu",
-    "email": "guyingjie129@163.com"
-  },
-  "keywords": [
-    "process"
-  ],
-  "devDependencies": {
-    "del": "^1.2.0",
-    "gulp": "^3.9.0",
-    "gulp-header": "^1.2.2",
-    "gulp-rename": "^1.2.2",
-    "gulp-uglify": "^1.2.0"
-  },
-  "dependencies": {}
+    "name": "process-table",
+    "description": "JavaScript 流程管理机制",
+    "version": "0.0.6",
+    "license": "MIT",
+    "homepage": "https://github.com/Lucifier129/process",
+    "main": "./dist/process.js",
+    "scripts": {
+        "test": "mocha",
+        "build": "./node_modules/.bin/gulp"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Lucifier129/process.git"
+    },
+    "author": {
+        "name": "Jade Gu",
+        "email": "guyingjie129@163.com"
+    },
+    "keywords": [
+        "process",
+        "table"
+    ],
+    "devDependencies": {
+        "del": "^1.2.0",
+        "gulp": "^3.9.0",
+        "gulp-header": "^1.2.2",
+        "gulp-rename": "^1.2.2",
+        "gulp-uglify": "^1.2.0"
+    },
+    "dependencies": {}
 }

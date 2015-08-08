@@ -26,7 +26,7 @@
     var slice = Array.prototype.slice
     var extend = function(target) {
         var sources = slice.call(arguments, 1)
-        for (var i = 0, len = sources.length; i < len; i += 1) {
+        for (var i = 0, len = sources.length; i < len; i++) {
             var source = sources[i]
             if (isObj(source)) {
                 for (var key in source) {
@@ -76,18 +76,16 @@
             }
         },
         dispatch: function(handler, value) {
-            var process = this
             if (value === null) {
                 return value
             }
+            var process = this
             if (isFn(handler)) {
                 return handler(value, process.state, process)
-            }
-            if (isStr(handler) || isNum(handler)) {
+            } else if (isStr(handler) || isNum(handler)) {
                 return process.dispatch(process.store[handler], value)
-            }
-            if (isArr(handler)) {
-                for (var i = 0, len = handler.length; i < len; i += 1) {
+            } else if (isArr(handler)) {
+                for (var i = 0, len = handler.length; i < len; i++) {
                     value = process.dispatch(handler[i], value)
                     if (value === null) {
                         return value
@@ -98,13 +96,11 @@
                         })
                     }
                 }
-            }
-            if (isThenable(handler)) {
+            } else if (isThenable(handler)) {
                 return handler.then(function(asyncHandler) {
                     return process.dispatch(asyncHandler, value)
                 })
-            }
-            if (isObj(handler) && isFn(handler.goTo)) {
+            } else if (isObj(handler) && isFn(handler.goTo)) {
                 return process.dispatch(handler.goTo(value, process.state, process), value)
             }
             return value
