@@ -3,17 +3,18 @@ var Process = require('../dist/process')
 
 describe('Process', function() {
     describe('#extend(...sources)', function() {
-        it('should "以构造函数参数形式，合并对象到 store 属性中"', function() {
+        it('should "以构造函数参数形式，合并到属性中"', function() {
             var source = {
                 a: 1,
                 b: 2,
                 c: 3
             }
             var process = new Process(source)
-            assert.deepEqual(process.store, source)
-            assert.notEqual(process.store, source)
+            for (var key in source) {
+                assert.equal(process[key], source[key])
+            }
         })
-        it('should "调用 extend 方法，合并单个对象到 store 属性中"', function() {
+        it('should "调用 extend 方法，合并到属性中"', function() {
             var process = new Process()
             var source = {
                 a: 1,
@@ -21,10 +22,11 @@ describe('Process', function() {
                 c: 3
             }
             process.extend(source)
-            assert.deepEqual(process.store, source)
-            assert.notEqual(process.store, source)
+            for (var key in source) {
+                assert.equal(process[key], source[key])
+            }
         })
-        it('should "调用 extend 方法，合并多个对象到 store 属性中"', function() {
+        it('should "调用 extend 方法，合并多个对象到属性中"', function() {
             var process = new Process()
             var source1 = {
                 a: 1,
@@ -38,10 +40,10 @@ describe('Process', function() {
             }
             process.extend(source1, source2)
             for (var key in source1) {
-                assert.equal(process.store[key], source1[key])
+                assert.equal(process[key], source1[key])
             }
             for (var key in source2) {
-                assert.equal(process.store[key], source2[key])
+                assert.equal(process[key], source2[key])
             }
         })
     })

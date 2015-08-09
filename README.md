@@ -13,7 +13,7 @@ var minus = function(num) {
     return num - 1
 }
 
-minus(add(add(1))) // => 1
+minus(add(add(1))) // => 2
 ```
 
 对于异步的场景，我们也拥有 es6.promise 可以传递返回值。
@@ -26,7 +26,7 @@ var minus = function(num) {
     return num - 1
 }
 Promise.resolve(1).then(add).then(add).then(minus).then(function(value) {
-    console.log(value) // => 1
+    console.log(value) // => 2
 })
 ```
 

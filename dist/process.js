@@ -1,5 +1,5 @@
 /*!
- * LastModifyTime: Sat Aug 08 2015 16:59:27 GMT+0800 (CST)
+ * LastModifyTime: Sun Aug 09 2015 21:45:16 GMT+0800 (CST)
  * Process.js Version: 0.0.6
  * Github:https://github.com/Lucifier129/process
  * Copyright(c) 2015 Jade Gu <guyingjie129@163.com>
@@ -46,40 +46,40 @@
         return target
     }
 
-    function Process(store, state) {
-        this.store = extend({}, store)
-        this.state = extend({}, state)
+    function Process(sources, state) {
+        extend(this, sources)
+        this.state = extend(this.state || {}, state)
     }
 
     Process.prototype = {
         extend: function() {
-            return extend.apply(null, [this.store].concat(slice.call(arguments)))
+            return extend.apply(null, [this].concat(slice.call(arguments)))
         },
         setState: function() {
             return extend.apply(null, [this.state].concat(slice.call(arguments)))
         },
         resolve: function(taskName, value) {
-            return this.dispatch(this.store[taskName], value)
+            return this.dispatch(this[taskName], value)
         },
         reject: function(errorName, value) {
-            var error = this.store.error
-            if (!(this.error instanceof Process)) {
-                this.error = new Process(error)
+            var error = this.error
+            if (!(this.$error instanceof Process)) {
+                this.$error = new Process(error)
             } else if (isObj(error)) {
-                this.error.extend(error)
+                this.$error.extend(error)
             }
-            return this.error.resolve(errorName, value)
+            return this.$error.resolve(errorName, value)
         },
-        willResolve: function(taskName) {
+        willResolve: function(taskName, defaultValue) {
             var self = this
             return function(value) {
-                return self.resolve(taskName, value)
+                return self.resolve(taskName, value || defaultValue)
             }
         },
-        willReject: function(errorName) {
+        willReject: function(errorName, defaultValue) {
             var self = this
             return function(value) {
-                return self.reject(errorName, value)
+                return self.reject(errorName, value || defaultValue)
             }
         },
         dispatch: function(handler, value) {
@@ -88,9 +88,9 @@
             }
             var process = this
             if (isFn(handler)) {
-                return handler(value, process.state, process)
+                return handler.call(process, value, process.state, process)
             } else if (isStr(handler) || isNum(handler)) {
-                return process.dispatch(process.store[handler], value)
+                return process.dispatch(process[handler], value)
             } else if (isArr(handler)) {
                 for (var i = 0, len = handler.length; i < len; i++) {
                     value = process.dispatch(handler[i], value)
