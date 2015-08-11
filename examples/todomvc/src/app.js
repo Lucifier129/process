@@ -1,5 +1,5 @@
 import Process from 'process-table'
-import storeProcess from './store'
+import store from './store'
 import View from './component/view'
 import React from 'react'
 
@@ -13,44 +13,36 @@ export default class App {
 	render(data) {
 		React.render(<View {...data} process={ this.process } />, document.getElementById(this.container))
 	}
-	getData() {
-		let activeFilter = location.hash
-		debugger
-		let todoCount = storeProcess.filterTodos({
-			state: false
-		}).length
-		let completedCount = storeProcess.getStore().length - todoCount
-		return {
-			todos: storeProcess.dispatch(['getStore', store => {
-				if (activeFilter === '#/active') {
-					return {
-						state: false
-					}
-				} else if (activeFilter === '#/completed') {
-					return {
-						state: true
-					}
-				}
-				return {}
-			}, 'filterTodos']),
-			activeFilter,
-			completedCount,
-			todoCount,
-			isAllCompleted: completedCount && !todoCount
-		}
-	}
 	combo() {
 		this.process.extend({
-			'render': [::this.getData, ::this.render],
-			'addTodo': [storeProcess.willResolve('addTodo'), 'render'],
-			'updateTodo': [storeProcess.willResolve('updateTodo'), 'render'],
-			'removeTodo': [storeProcess.willResolve('removeTodo'), 'render'],
-			'toggleAll': [storeProcess.willResolve('toggleAll'), 'render'],
-			'clearCompleted': [storeProcess.willResolve('clearCompleted'), 'render']
+			'render': [
+				store => ({
+					store,
+					activeFilter: location.hash
+				}),
+				store.willResolve('getInfoByActiveFilter'),
+				::this.render
+			],
+			'addTodo': [
+				title => {
+					if (store.resolve('filterTodos', { title }).length !== 0) {
+						alert('任务已存在')
+						return null
+					}
+					return title
+				},
+				store.willResolve('addTodo'),
+				'render'
+			],
+			'updateTodo': [store.willResolve('updateTodo'), 'render'],
+			'removeTodo': [store.willResolve('removeTodo'), 'render'],
+			'toggleAll': [store.willResolve('toggleAll'), 'render'],
+			'clearCompleted': [store.willResolve('clearCompleted'), 'render'],
+			'filterByTitle': [store.willResolve('filterByTitle'), 'render']
 		})
 	}
 	listen() {
-		let render = this.process.willResolve('render')
+		let render = () => this.process.dispatch([store.willResolve('getStore'), 'render'])
 		window.addEventListener('hashchange', render, false)
 		document.addEventListener('DOMContentLoaded', render, false)
 	}

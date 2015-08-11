@@ -90,49 +90,37 @@
 				_react2['default'].render(_react2['default'].createElement(_componentView2['default'], _extends({}, data, { process: this.process })), document.getElementById(this.container));
 			}
 		}, {
-			key: 'getData',
-			value: function getData() {
-				var activeFilter = location.hash;
-				debugger;
-				var todoCount = _store2['default'].filterTodos({
-					state: false
-				}).length;
-				var completedCount = _store2['default'].getStore().length - todoCount;
-				return {
-					todos: _store2['default'].dispatch(['getStore', function (store) {
-						if (activeFilter === '#/active') {
-							return {
-								state: false
-							};
-						} else if (activeFilter === '#/completed') {
-							return {
-								state: true
-							};
-						}
-						return {};
-					}, 'filterTodos']),
-					activeFilter: activeFilter,
-					completedCount: completedCount,
-					todoCount: todoCount,
-					isAllCompleted: completedCount && !todoCount
-				};
-			}
-		}, {
 			key: 'combo',
 			value: function combo() {
 				this.process.extend({
-					'render': [this.getData.bind(this), this.render.bind(this)],
-					'addTodo': [_store2['default'].willResolve('addTodo'), 'render'],
+					'render': [function (store) {
+						return {
+							store: store,
+							activeFilter: location.hash
+						};
+					}, _store2['default'].willResolve('getInfoByActiveFilter'), this.render.bind(this)],
+					'addTodo': [function (title) {
+						if (_store2['default'].resolve('filterTodos', { title: title }).length !== 0) {
+							alert('任务已存在');
+							return null;
+						}
+						return title;
+					}, _store2['default'].willResolve('addTodo'), 'render'],
 					'updateTodo': [_store2['default'].willResolve('updateTodo'), 'render'],
 					'removeTodo': [_store2['default'].willResolve('removeTodo'), 'render'],
 					'toggleAll': [_store2['default'].willResolve('toggleAll'), 'render'],
-					'clearCompleted': [_store2['default'].willResolve('clearCompleted'), 'render']
+					'clearCompleted': [_store2['default'].willResolve('clearCompleted'), 'render'],
+					'filterByTitle': [_store2['default'].willResolve('filterByTitle'), 'render']
 				});
 			}
 		}, {
 			key: 'listen',
 			value: function listen() {
-				var render = this.process.willResolve('render');
+				var _this = this;
+
+				var render = function render() {
+					return _this.process.dispatch([_store2['default'].willResolve('getStore'), 'render']);
+				};
 				window.addEventListener('hashchange', render, false);
 				document.addEventListener('DOMContentLoaded', render, false);
 			}
@@ -433,130 +421,132 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	/*!
-	 * LastModifyTime: Sat Aug 08 2015 16:59:27 GMT+0800 (CST)
+	 * LastModifyTime: 2015-08-11 15:07:36
 	 * Process.js Version: 0.0.6
 	 * Github:https://github.com/Lucifier129/process
 	 * Copyright(c) 2015 Jade Gu <guyingjie129@163.com>
 	 * MIT Licensed
 	 */
-	;(function(root, factory) {
-	    if (true)
-	        module.exports = factory()
-	    else if (typeof define === 'function' && (define.amd || define.cmd))
-	        define(factory)
-	    else if (typeof exports === 'object')
-	        exports["Process"] = factory()
-	    else
-	        root["Process"] = factory()
-	}(this, function() {
-	    var isType = function(type) {
-	        type = '[object ' + type + ']'
-	        return function(obj) {
-	            return obj != null && Object.prototype.toString.call(obj) === type
-	        }
-	    }
-	    var isObj = isType('Object')
-	    var isStr = isType('String')
-	    var isNum = isType('Number')
-	    var isFn = isType('Function')
-	    var isArr = Array.isArray || isType('Array')
-	    var isThenable = function(obj) {
-	        return obj != null && isFn(obj.then)
-	    }
+	'use strict';
 
-	    var slice = Array.prototype.slice
-	    var extend = function(target) {
-	        var sources = slice.call(arguments, 1)
+	;(function (root, factory) {
+	    if (true) module.exports = factory();else if (typeof define === 'function' && (define.amd || define.cmd)) define(factory);else if (typeof exports === 'object') exports["Process"] = factory();else root["Process"] = factory();
+	})(undefined, function () {
+	    var isType = function isType(type) {
+	        type = '[object ' + type + ']';
+	        return function (obj) {
+	            return obj != null && Object.prototype.toString.call(obj) === type;
+	        };
+	    };
+	    var isObj = isType('Object');
+	    var isStr = isType('String');
+	    var isNum = isType('Number');
+	    var isFn = isType('Function');
+	    var isArr = Array.isArray || isType('Array');
+	    var isThenable = function isThenable(obj) {
+	        return obj != null && isFn(obj.then);
+	    };
+
+	    var slice = Array.prototype.slice;
+	    var _extend = function _extend(target) {
+	        var sources = slice.call(arguments, 1);
 	        for (var i = 0, len = sources.length; i < len; i++) {
-	            var source = sources[i]
+	            var source = sources[i];
 	            if (isObj(source)) {
 	                for (var key in source) {
 	                    if (source.hasOwnProperty(key)) {
-	                        target[key] = source[key]
+	                        target[key] = source[key];
 	                    }
 	                }
 	            }
 	        }
-	        return target
-	    }
+	        return target;
+	    };
 
-	    function Process(store, state) {
-	        this.store = extend({}, store)
-	        this.state = extend({}, state)
+	    function Process(sources, state) {
+	        _extend(this, sources);
+	        this.state = _extend(this.state || {}, state);
 	    }
 
 	    Process.prototype = {
-	        extend: function() {
-	            return extend.apply(null, [this.store].concat(slice.call(arguments)))
+	        extend: function extend() {
+	            return _extend.apply(null, [this].concat(slice.call(arguments)));
 	        },
-	        setState: function() {
-	            return extend.apply(null, [this.state].concat(slice.call(arguments)))
+	        setState: function setState() {
+	            return _extend.apply(null, [this.state].concat(slice.call(arguments)));
 	        },
-	        resolve: function(taskName, value) {
-	            return this.dispatch(this.store[taskName], value)
+	        resolve: function resolve(taskName, value) {
+	            return this.dispatch(this[taskName], value);
 	        },
-	        reject: function(errorName, value) {
-	            var error = this.store.error
-	            if (!(this.error instanceof Process)) {
-	                this.error = new Process(error)
+	        reject: function reject(errorName, value) {
+	            var error = this.error;
+	            if (!(this.$error instanceof Process)) {
+	                this.$error = new Process(error);
 	            } else if (isObj(error)) {
-	                this.error.extend(error)
+	                this.$error.extend(error);
 	            }
-	            return this.error.resolve(errorName, value)
+	            return this.$error.resolve(errorName, value);
 	        },
-	        willResolve: function(taskName) {
-	            var self = this
-	            return function(value) {
-	                return self.resolve(taskName, value)
-	            }
+	        willResolve: function willResolve(taskName) {
+	            var self = this;
+	            return function (value) {
+	                return self.resolve(taskName, value);
+	            };
 	        },
-	        willReject: function(errorName) {
-	            var self = this
-	            return function(value) {
-	                return self.reject(errorName, value)
-	            }
+	        willReject: function willReject(errorName) {
+	            var self = this;
+	            return function (value) {
+	                return self.reject(errorName, value);
+	            };
 	        },
-	        dispatch: function(handler, value) {
+	        willDispatch: function willDispatch(handler) {
+	            var self = this;
+	            return function (value) {
+	                return self.dispatch(handler, value);
+	            };
+	        },
+	        dispatch: function dispatch(handler, value) {
 	            if (value === null) {
-	                return value
+	                return value;
 	            }
-	            var process = this
+	            var process = this;
 	            if (isFn(handler)) {
-	                return handler(value, process.state, process)
+	                return handler.call(process, value, process.state, process);
 	            } else if (isStr(handler) || isNum(handler)) {
-	                return process.dispatch(process.store[handler], value)
+	                return process.dispatch(process[handler], value);
 	            } else if (isArr(handler)) {
 	                for (var i = 0, len = handler.length; i < len; i++) {
-	                    value = process.dispatch(handler[i], value)
+	                    value = process.dispatch(handler[i], value);
 	                    if (value === null) {
-	                        return value
+	                        return value;
 	                    }
 	                    if (isThenable(value)) {
-	                        return i === len - 1 ? value : value.then(function(result) {
-	                            return process.dispatch(handler.slice(i + 1), result)
-	                        })
+	                        return i === len - 1 ? value : value.then(function (result) {
+	                            return process.dispatch(handler.slice(i + 1), result);
+	                        });
 	                    }
 	                }
 	            } else if (isThenable(handler)) {
-	                return handler.then(function(asyncHandler) {
-	                    return process.dispatch(asyncHandler, value)
-	                })
+	                return handler.then(function (asyncHandler) {
+	                    return process.dispatch(asyncHandler, value);
+	                });
 	            } else if (isObj(handler) && isFn(handler.goTo)) {
-	                return process.dispatch(handler.goTo(value, process.state, process), value)
+	                return process.dispatch(handler.goTo(value, process.state, process), value);
 	            }
-	            return value
+	            return value;
 	        }
-	    }
+	    };
 
-	    return Process
-	}));
-
+	    return Process;
+	});
 
 /***/ },
 /* 21 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
+
+	var _extends = __webpack_require__(6)['default'];
 
 	var _Object$assign = __webpack_require__(7)['default'];
 
@@ -575,11 +565,14 @@
 	var process = new _processTable2['default']();
 
 	exports['default'] = process;
-	var _getStore = localStorage.getItem.bind(localStorage);
+	var _getStore = function _getStore(name) {
+		return JSON.parse(localStorage.getItem(name) || '[]');
+	};
 
 	exports.getStore = _getStore;
 	var _saveStore = function _saveStore(name, data) {
-		return localStorage.setItem(name, JSON.stringify(data));
+		localStorage.setItem(name, JSON.stringify(data));
+		return data;
 	};
 
 	exports.saveStore = _saveStore;
@@ -590,7 +583,8 @@
 			time: date.toLocaleString(),
 			state: false
 		}, source);
-		return item;
+		store.push(item);
+		return store;
 	};
 
 	exports.addItem = addItem;
@@ -627,7 +621,7 @@
 	var removeItem = function removeItem(id, store) {
 		for (var i = 0; i < store.length; i++) {
 			if (store[i].id === id) {
-				store.splice(i, 0);
+				store.splice(i, 1);
 				break;
 			}
 		}
@@ -683,7 +677,7 @@
 	process.extend({
 		name: 'process-table',
 		getStore: function getStore() {
-			return _getStore(this.name) || [];
+			return _getStore(this.name);
 		},
 		saveStore: function saveStore(store) {
 			return _saveStore(this.name, store);
@@ -704,6 +698,7 @@
 			}, 'saveStore']);
 		},
 		toggleAll: function toggleAll(state) {
+			console.log(state);
 			return this.dispatch(['getStore', function (store) {
 				return _toggleAll(state, store);
 			}, 'saveStore']);
@@ -711,7 +706,44 @@
 		filterTodos: function filterTodos(query) {
 			return this.dispatch(['getStore', function (store) {
 				return filter(query, store);
-			}, 'saveStore']);
+			}]);
+		},
+		filterByTitle: function filterByTitle(title) {
+			var store = this.getStore();
+			if (!title) {
+				return store;
+			}
+			var result = [];
+			var _iteratorNormalCompletion3 = true;
+			var _didIteratorError3 = false;
+			var _iteratorError3 = undefined;
+
+			try {
+				for (var _iterator3 = _getIterator(store), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+					var item = _step3.value;
+
+					if (item.title.includes(title)) {
+						result.push(_extends({}, item, {
+							title: item.title.split(title).join('[' + title + ']')
+						}));
+					}
+				}
+			} catch (err) {
+				_didIteratorError3 = true;
+				_iteratorError3 = err;
+			} finally {
+				try {
+					if (!_iteratorNormalCompletion3 && _iterator3['return']) {
+						_iterator3['return']();
+					}
+				} finally {
+					if (_didIteratorError3) {
+						throw _iteratorError3;
+					}
+				}
+			}
+
+			return result;
 		},
 		clearCompleted: function clearCompleted() {
 			return this.dispatch(['getStore', function (store) {
@@ -720,6 +752,28 @@
 				}
 				return store;
 			}, 'saveStore']);
+		},
+		getInfoByActiveFilter: function getInfoByActiveFilter(_ref) {
+			var store = _ref.store;
+			var activeFilter = _ref.activeFilter;
+
+			var todoCount = filter({
+				state: false
+			}, store).length;
+			var completedCount = store.length - todoCount;
+			var query = {};
+			if (activeFilter === '#/active') {
+				query.state = false;
+			} else if (activeFilter === '#/completed') {
+				query.state = true;
+			}
+			return {
+				activeFilter: activeFilter,
+				completedCount: completedCount,
+				todoCount: todoCount,
+				todos: filter(query, store),
+				isAllCompleted: completedCount > 0 && todoCount === 0
+			};
 		}
 	});
 
@@ -1153,18 +1207,18 @@
 		_createClass(View, [{
 			key: 'render',
 			value: function render() {
-				var _props$data = this.props.data;
-				var isAllCompleted = _props$data.isAllCompleted;
-				var todos = _props$data.todos;
-				var activeFilter = _props$data.activeFilter;
-				var completedCount = _props$data.completedCount;
-				var todoCount = _props$data.todoCount;
-				var process = _props$data.process;
+				var _props = this.props;
+				var isAllCompleted = _props.isAllCompleted;
+				var todos = _props.todos;
+				var activeFilter = _props.activeFilter;
+				var completedCount = _props.completedCount;
+				var todoCount = _props.todoCount;
+				var process = _props.process;
 
 				return _react2['default'].createElement(
 					'div',
 					null,
-					_react2['default'].createElement(_newTodo2['default'], { addTodo: addTodo, process: process }),
+					_react2['default'].createElement(_newTodo2['default'], { process: process }),
 					_react2['default'].createElement(_main2['default'], {
 						isAllCompleted: isAllCompleted,
 						todos: todos,
@@ -21856,27 +21910,25 @@
 		}
 
 		_createClass(NewTodo, [{
-			key: 'handleBlur',
-			value: function handleBlur(e) {
-				var title = e.currentTarget.value.trim();
-				if (title) {
-					this.process.resolve('addTodo', title);
-					e.currentTarget.value = '';
-				}
-			}
-		}, {
 			key: 'handleKeyup',
 			value: function handleKeyup(e) {
 				var keyCode = e.keyCode;
 				if (keyCode === ENTER_KEY || keyCode === ESCAPE_KEY) {
-					this.handleBlur(e);
+					var title = e.currentTarget.value.trim();
+					if (title) {
+						this.props.process.resolve('addTodo', title);
+						e.currentTarget.value = '';
+					}
 				}
+			}
+		}, {
+			key: 'handleInput',
+			value: function handleInput(e) {
+				this.props.process.resolve('filterByTitle', e.currentTarget.value.trim());
 			}
 		}, {
 			key: 'render',
 			value: function render() {
-				var _context;
-
 				return _react2['default'].createElement(
 					'header',
 					{ id: 'header' },
@@ -21888,8 +21940,8 @@
 					_react2['default'].createElement('input', {
 						id: 'new-todo',
 						placeholder: 'What needs to be done?',
-						onBlur: this.handleBlur.bind(this),
-						onKeyUp: (_context = his).handleKeyup.bind(_context),
+						onInput: this.handleInput.bind(this),
+						onKeyUp: this.handleKeyup.bind(this),
 						autoFocus: true })
 				);
 			}
@@ -22013,7 +22065,7 @@
 				var _this = this;
 
 				var todoList = this.props.todos.map(function (todo) {
-					return _react2['default'].createElement(_todo2['default'], _extends({}, todo, { process: _this.props.process }));
+					return _react2['default'].createElement(_todo2['default'], _extends({}, todo, { key: todo.id, process: _this.props.process }));
 				});
 				return _react2['default'].createElement(
 					'ul',
@@ -22072,7 +22124,7 @@
 			key: 'getClassName',
 			value: function getClassName() {
 				var className = [];
-				if (this.props.completed) {
+				if (this.props.state) {
 					className.push('completed');
 				}
 				if (this.state.onEdit) {
@@ -22118,7 +22170,7 @@
 			key: 'toggleTodo',
 			value: function toggleTodo(e) {
 				this.updateTodo({
-					completed: e.currentTarget.checked
+					state: e.currentTarget.checked
 				});
 			}
 		}, {
@@ -22130,7 +22182,7 @@
 					id: this.props.id,
 					title: options.title || this.props.title,
 					time: options.time || this.props.time,
-					completed: options.completed !== undefined ? options.completed : this.props.completed
+					state: options.state !== undefined ? options.state : this.props.state
 				});
 			}
 		}, {
@@ -22140,22 +22192,24 @@
 				var id = _props.id;
 				var title = _props.title;
 				var time = _props.time;
-				var completed = _props.completed;
+				var state = _props.state;
 				var process = _props.process;
 
 				return _react2['default'].createElement(
 					'li',
-					{ key: id, className: this.getClassName(), title: time },
+					{ className: this.getClassName(), title: time },
 					_react2['default'].createElement(
 						'div',
 						{ className: 'view' },
-						_react2['default'].createElement('input', { className: 'toggle', type: 'checkbox', onChange: this.toggleTodo.bind(this), checked: completed }),
+						_react2['default'].createElement('input', { className: 'toggle', type: 'checkbox', onChange: this.toggleTodo.bind(this), checked: state }),
 						_react2['default'].createElement(
 							'label',
 							{ onDoubleClick: this.handleDblclick.bind(this) },
 							title
 						),
-						_react2['default'].createElement('button', { className: 'destroy', onClick: process.willResolve('removeTodo', id) })
+						_react2['default'].createElement('button', { className: 'destroy', onClick: function (e) {
+								return process.resolve('removeTodo', id);
+							} })
 					),
 					_react2['default'].createElement('input', { className: 'edit', onBlur: this.handleBlur.bind(this), onKeyUp: this.handleKeyup.bind(this), ref: 'editor' })
 				);

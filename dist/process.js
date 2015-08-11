@@ -1,6 +1,6 @@
 /*!
- * LastModifyTime: Sun Aug 09 2015 21:45:16 GMT+0800 (CST)
- * Process.js Version: 0.0.6
+ * LastModifyTime: 2015-08-11 15:18:23
+ * Process.js Version: 0.0.7
  * Github:https://github.com/Lucifier129/process
  * Copyright(c) 2015 Jade Gu <guyingjie129@163.com>
  * MIT Licensed
@@ -70,16 +70,22 @@
             }
             return this.$error.resolve(errorName, value)
         },
-        willResolve: function(taskName, defaultValue) {
+        willResolve: function(taskName) {
             var self = this
             return function(value) {
-                return self.resolve(taskName, value || defaultValue)
+                return self.resolve(taskName, value)
             }
         },
-        willReject: function(errorName, defaultValue) {
+        willReject: function(errorName) {
             var self = this
             return function(value) {
-                return self.reject(errorName, value || defaultValue)
+                return self.reject(errorName, value)
+            }
+        },
+        willDispatch: function(handler) {
+            var self = this
+            return function(value) {
+                return self.dispatch(handler, value)
             }
         },
         dispatch: function(handler, value) {

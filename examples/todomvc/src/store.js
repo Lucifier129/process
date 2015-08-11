@@ -4,9 +4,12 @@ let process = new Process()
 
 export default process 
 
-export let getStore = ::localStorage.getItem
+export let getStore = name => JSON.parse(localStorage.getItem(name) || '[]')
 
-export let saveStore = (name, data) => localStorage.setItem(name, JSON.stringify(data))
+export let saveStore = (name, data) => {
+	localStorage.setItem(name, JSON.stringify(data))
+	return data
+}
 
 export let addItem = (source, store) => {
 	let date = new Date()
@@ -15,7 +18,8 @@ export let addItem = (source, store) => {
 		time: date.toLocaleString(),
 		state: false
 	}, source)
-	return item
+	store.push(item)
+	return store
 }
 
 export let updateItem = (source, store) => {
@@ -28,7 +32,7 @@ export let updateItem = (source, store) => {
 export let removeItem = (id, store) => {
 	for (var i = 0; i < store.length; i++) {
 		if (store[i].id === id) {
-			store.splice(i, 0)
+			store.splice(i, 1)
 			break
 		}
 	}
@@ -57,7 +61,7 @@ export let filter = (query, store) => store.filter(item => {
 process.extend({
 	name: 'process-table',
 	getStore() {
-		return getStore(this.name) || []
+		return getStore(this.name)
 	},
 	saveStore(store) {
 		return saveStore(this.name, store)
@@ -72,10 +76,27 @@ process.extend({
 		return this.dispatch(['getStore', store => removeItem(id, store), 'saveStore'])
 	},
 	toggleAll(state) {
+		console.log(state)
 		return this.dispatch(['getStore', store => toggleAll(state, store), 'saveStore'])
 	},
 	filterTodos(query) {
-		return this.dispatch(['getStore', store => filter(query, store), 'saveStore'])
+		return this.dispatch(['getStore', store => filter(query, store)])
+	},
+	filterByTitle(title) {
+		let store = this.getStore()
+		if (!title) {
+			return store
+		}
+		let result = []
+		for (let item of store) {
+			if (item.title.includes(title)) {
+				result.push({
+					...item,
+					title: item.title.split(title).join(`[${title}]`)
+				})
+			}
+		}
+		return result
 	},
 	clearCompleted() {
 		return this.dispatch(['getStore', store => {
@@ -84,5 +105,24 @@ process.extend({
 			}
 			return store
 		}, 'saveStore'])
+	},
+	getInfoByActiveFilter({store, activeFilter}) {
+		let todoCount = filter({
+			state: false
+		}, store).length
+		let completedCount = store.length - todoCount
+		let query = {}
+		if (activeFilter === '#/active') {
+			query.state = false
+		} else if ( activeFilter === '#/completed') {
+			query.state = true
+		}
+		return {
+			activeFilter,
+			completedCount,
+			todoCount,
+			todos: filter(query, store),
+			isAllCompleted: completedCount > 0 && todoCount === 0
+		}
 	}
 })

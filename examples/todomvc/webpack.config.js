@@ -40,6 +40,7 @@ module.exports = {
         root: path.join(__dirname, 'src'),
         modulesDirectories: ["node_modules"],
         alias: {
+            'process-table': path.join(__dirname, 'process'),
             helper: 'helper',
             component: 'component'
         }

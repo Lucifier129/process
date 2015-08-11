@@ -1,3 +1,10 @@
+/*!
+ * LastModifyTime: 2015-08-11 15:07:36
+ * Process.js Version: 0.0.6
+ * Github:https://github.com/Lucifier129/process
+ * Copyright(c) 2015 Jade Gu <guyingjie129@163.com>
+ * MIT Licensed
+ */
 ;(function(root, factory) {
     if (typeof exports === 'object' && typeof module === 'object')
         module.exports = factory()

@@ -11,7 +11,7 @@ export default class Todo extends Component {
 	}
 	getClassName() {
 		let className = []
-		if (this.props.completed) {
+		if (this.props.state) {
 			className.push('completed')
 		}
 		if (this.state.onEdit) {
@@ -49,7 +49,7 @@ export default class Todo extends Component {
 	}
 	toggleTodo(e) {
 		this.updateTodo({
-			completed: e.currentTarget.checked
+			state: e.currentTarget.checked
 		})
 	}
 	updateTodo(options = {}) {
@@ -57,17 +57,17 @@ export default class Todo extends Component {
 			id: this.props.id,
 			title: options.title || this.props.title,
 			time: options.time || this.props.time,
-			completed: options.completed !== undefined ? options.completed : this.props.completed
+			state: options.state !== undefined ? options.state : this.props.state
 		})
 	}
 	render() {
-		let { id, title, time, completed, process } = this.props
+		let { id, title, time, state, process } = this.props
 		return (
-			<li key={ id } className={this.getClassName()} title={ time }>
+			<li className={this.getClassName()} title={ time }>
 				<div className="view">
-					<input className="toggle" type="checkbox" onChange={ ::this.toggleTodo } checked={ completed } />
+					<input className="toggle" type="checkbox" onChange={ ::this.toggleTodo } checked={ state } />
 					<label onDoubleClick={ ::this.handleDblclick }>{ title }</label>
-					<button className="destroy" onClick={ process.willResolve('removeTodo', id) }></button>
+					<button className="destroy" onClick={ e => process.resolve('removeTodo', id) }></button>
 				</div>
 				<input className="edit" onBlur={ ::this.handleBlur } onKeyUp={ ::this.handleKeyup } ref="editor" />
 			</li>

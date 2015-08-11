@@ -1,7 +1,7 @@
 {
     "name": "process-table",
     "description": "JavaScript 流程管理机制",
-    "version": "0.0.6",
+    "version": "0.0.7",
     "license": "MIT",
     "homepage": "https://github.com/Lucifier129/process",
     "main": "./dist/process.js",

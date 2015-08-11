@@ -5,13 +5,13 @@ import Filters from './filters'
 
 export default class View extends Component {
 	render() {
-		let { isAllCompleted, todos, activeFilter, completedCount, todoCount, process } = this.props.data
+		let { isAllCompleted, todos, activeFilter, completedCount, todoCount, process } = this.props
 		return (<div>
-					<NewTodo addTodo={ addTodo } process={ process } />
+					<NewTodo process={ process } />
 					<Main
 						isAllCompleted={ isAllCompleted }
 						todos={ todos }
-						 process={ process } />
+						process={ process } />
 					<Filters
 						activeFilter={ activeFilter }
 						completedCount={ completedCount }
